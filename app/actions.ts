@@ -8,7 +8,7 @@ export async function createLink() {
       data: {
         slug: `test-link-${Date.now()}`,
         originalUrl: "https://example.com",
-        userId: "clx0123456789abcdefghijklm", // Replace with a valid userId from your database or create a dummy one
+        userId: "cmd9pn5c20001v2isn1gbw9kz", // Replace with a valid userId from your database or create a dummy one
       },
     });
     revalidatePath("/");
