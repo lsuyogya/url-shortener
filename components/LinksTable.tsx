@@ -6,6 +6,7 @@ import {
   getCoreRowModel,
   flexRender,
   getPaginationRowModel,
+  getSortedRowModel,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -33,6 +34,7 @@ export function LinksTable({ links, origin }: LinksTableProps) {
       {
         accessorKey: "redirectionUrl",
         header: "Redirection URL",
+        enableSorting: false, // has btn tags, no point sorting
         cell: (info: any) => (
           <div className="flex items-center gap-2">
             <span>{`${origin}/${info.row.original.slug}`}</span>
@@ -69,6 +71,7 @@ export function LinksTable({ links, origin }: LinksTableProps) {
       {
         accessorKey: "lastVisit",
         header: "Last Visit",
+        enableSorting: true,
         cell: (info: any) =>
           info.row.original.visits.length > 0
             ? new Date(info.row.original.visits[0].timestamp).toLocaleString()
@@ -82,15 +85,19 @@ export function LinksTable({ links, origin }: LinksTableProps) {
     pageIndex: 0,
     pageSize: 5,
   });
+  const [sorting, setSorting] = useState([]);
 
   const table = useReactTable({
     data: links,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
+    getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination,
+    onSortingChange: setSorting,
     state: {
       pagination,
+      sorting,
     },
   });
 
@@ -105,9 +112,24 @@ export function LinksTable({ links, origin }: LinksTableProps) {
                   key={header.id}
                   className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left"
                 >
-                  {flexRender(
-                    header.column.columnDef.header,
-                    header.getContext()
+                  {header.isPlaceholder ? null : (
+                    <div
+                      {...{
+                        className: header.column.getCanSort()
+                          ? "cursor-pointer select-none flex items-center justify-between"
+                          : "",
+                        onClick: header.column.getToggleSortingHandler(),
+                      }}
+                    >
+                      {flexRender(
+                        header.column.columnDef.header,
+                        header.getContext()
+                      )}
+                      {{
+                        asc: " ▲",
+                        desc: " ▼",
+                      }[header.column.getIsSorted() as string] ?? null}
+                    </div>
                   )}
                 </th>
               ))}
@@ -127,6 +149,27 @@ export function LinksTable({ links, origin }: LinksTableProps) {
               ))}
             </tr>
           ))}
+          {table.getRowModel().rows.length <
+            table.getState().pagination.pageSize &&
+            Array.from(
+              {
+                length:
+                  table.getState().pagination.pageSize -
+                  table.getRowModel().rows.length,
+              },
+              (_, i) => (
+                <tr key={`empty-${i}`}>
+                  {columns.map((column: any) => (
+                    <td
+                      key={column.accessorKey}
+                      className="py-2 px-4 border-b border-primary-light"
+                    >
+                      &nbsp;
+                    </td>
+                  ))}
+                </tr>
+              )
+            )}
         </tbody>
       </table>
       <div className="flex justify-between items-center mt-4 text-accent-light">

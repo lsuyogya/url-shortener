@@ -32,9 +32,7 @@ export function RedirectBanner({ originalUrl, delay }: RedirectBannerProps) {
       </h1>
       <p className="text-lg">
         You are being redirected to:{" "}
-        <a href={originalUrl} className="text-primary-light hover:underline">
-          {originalUrl}
-        </a>
+        <span className="text-primary-light">{originalUrl}</span>
       </p>
       <div className="mt-8 p-4 bg-primary-light rounded-lg shadow-lg">
         <div className="flex flex-col gap-6 items-center">

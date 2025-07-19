@@ -36,7 +36,7 @@ export default async function Dashboard() {
   const origin = `${protocol}://${host}`;
   const imgUrl = session?.user?.image ?? "/default-avatar.svg";
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between container pt-12! md:pt-24! gap-12">
+    <main className="flex flex-col items-center justify-between container pt-12! md:pt-24! gap-12">
       <div className="welcomeWrapper flex gap-6">
         <div className="imgWrapper content-center justify-center">
           <Image

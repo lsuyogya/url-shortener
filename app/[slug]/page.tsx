@@ -38,7 +38,7 @@ export default async function RedirectPage({ params }: RedirectPageProps) {
     },
   });
 
-  const Ad_Timer_seconds = 30;
+  const Ad_Timer_seconds = 10;
 
   return (
     <RedirectBanner originalUrl={link.originalUrl} delay={Ad_Timer_seconds} />

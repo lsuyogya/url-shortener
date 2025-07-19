@@ -32,7 +32,7 @@ export async function createLink(formData: FormData) {
     });
 
     if (existingLink) {
-      throw new Error("URL already shortened by you.");
+      throw new Error("URL is already shortened.");
     }
 
     const newLink = await prisma.$transaction(async (tx) => {
