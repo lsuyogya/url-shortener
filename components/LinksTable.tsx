@@ -1,6 +1,14 @@
 "use client";
 
 import { Link, Visit } from "@prisma/client";
+import {
+  useReactTable,
+  getCoreRowModel,
+  flexRender,
+  getPaginationRowModel,
+} from "@tanstack/react-table";
+import { useMemo, useState } from "react";
+import toast from "react-hot-toast";
 
 interface LinkWithVisits extends Link {
   visits: Visit[];
@@ -14,71 +22,136 @@ interface LinksTableProps {
 export function LinksTable({ links, origin }: LinksTableProps) {
   const handleCopy = (text: string) => {
     navigator.clipboard.writeText(text);
+    toast.success("Copied to clipboard!");
   };
   const handleOpen = (text: string) => {
     window.open(text, "_blank");
   };
 
+  const columns = useMemo(
+    () => [
+      {
+        accessorKey: "redirectionUrl",
+        header: "Redirection URL",
+        cell: (info: any) => (
+          <div className="flex items-center gap-2">
+            <span>{`${origin}/${info.row.original.slug}`}</span>
+            <button
+              onClick={() => handleCopy(`${origin}/${info.row.original.slug}`)}
+              className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
+            >
+              Copy
+            </button>
+            <button
+              onClick={() => handleOpen(`${origin}/${info.row.original.slug}`)}
+              className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
+            >
+              Open
+            </button>
+          </div>
+        ),
+      },
+      {
+        accessorKey: "originalUrl",
+        header: "Original URL",
+        cell: (info: any) => info.getValue(),
+      },
+      {
+        accessorKey: "createdAt",
+        header: "Created At",
+        cell: (info: any) => new Date(info.getValue()).toLocaleString(),
+      },
+      {
+        accessorKey: "clicks",
+        header: "Visit Count",
+        cell: (info: any) => info.getValue(),
+      },
+      {
+        accessorKey: "lastVisit",
+        header: "Last Visit",
+        cell: (info: any) =>
+          info.row.original.visits.length > 0
+            ? new Date(info.row.original.visits[0].timestamp).toLocaleString()
+            : "N/A",
+      },
+    ],
+    [origin]
+  );
+
+  const [pagination, setPagination] = useState({
+    pageIndex: 0,
+    pageSize: 5,
+  });
+
+  const table = useReactTable({
+    data: links,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+    onPaginationChange: setPagination,
+    state: {
+      pagination,
+    },
+  });
+
   return (
     <div className="overflow-x-auto">
       <table className="min-w-full bg-primary-dark border border-primary-light text-accent-light">
         <thead className="bg-accent-dark text-primary-dark">
-          <tr>
-            <th className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left">
-              Redirection URL
-            </th>
-            <th className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left">
-              Original URL
-            </th>
-            <th className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left">
-              Created At
-            </th>
-            <th className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left">
-              Visit Count
-            </th>
-            <th className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left">
-              Last Visit
-            </th>
-          </tr>
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left"
+                >
+                  {flexRender(
+                    header.column.columnDef.header,
+                    header.getContext()
+                  )}
+                </th>
+              ))}
+            </tr>
+          ))}
         </thead>
         <tbody className="bg-primary-dark">
-          {links.map((link) => (
-            <tr key={link.id}>
-              <td className="py-2 px-4 border-b border-primary-light">
-                <div className="flex items-center gap-2">
-                  <span>{`${origin}/${link.slug}`}</span>
-                  <button
-                    onClick={() => handleCopy(`${origin}/${link.slug}`)}
-                    className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
-                  >
-                    Copy
-                  </button>
-                  <button
-                    onClick={() => handleOpen(`${origin}/${link.slug}`)}
-                    className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
-                  >
-                    Open
-                  </button>
-                </div>
-              </td>
-              <td className="py-2 px-4 border-b border-primary-light">
-                {link.originalUrl}
-              </td>
-              <td className="py-2 px-4 border-b border-primary-light">
-                {new Date(link.createdAt).toLocaleString()}
-              </td>
-              <td className="py-2 px-4 border-b border-primary-light">
-                {link.clicks}
-              </td>
-              <td className="py-2 px-4 border-b border-primary-light">
-                {link.visits.length > 0
-                  ? new Date(link.visits[0].timestamp).toLocaleString()
-                  : "N/A"}
-              </td>
+          {table.getRowModel().rows.map((row) => (
+            <tr key={row.id}>
+              {row.getVisibleCells().map((cell) => (
+                <td
+                  key={cell.id}
+                  className="py-2 px-4 border-b border-primary-light"
+                >
+                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                </td>
+              ))}
             </tr>
           ))}
         </tbody>
       </table>
+      <div className="flex justify-between items-center mt-4 text-accent-light">
+        <button
+          onClick={() => table.previousPage()}
+          disabled={!table.getCanPreviousPage()}
+          className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          Previous
+        </button>
+        <span>
+          Page{" "}
+          <strong>
+            {table.getState().pagination.pageIndex + 1} of{" "}
+            {table.getPageCount()}
+          </strong>
+        </span>
+        <button
+          onClick={() => table.nextPage()}
+          disabled={!table.getCanNextPage()}
+          className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-2 px-4 rounded disabled:opacity-50"
+        >
+          Next
+        </button>
+      </div>
     </div>
   );
 }

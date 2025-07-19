@@ -1,4 +1,4 @@
-import { createLink, deleteLatestLink } from "@/app/actions";
+import { CreateLinkForm } from "@/components/CreateLinkForm";
 import { prisma } from "@/prisma";
 
 import { auth } from "@/lib/auth";
@@ -36,7 +36,7 @@ export default async function Dashboard() {
   const origin = `${protocol}://${host}`;
   const imgUrl = session?.user?.image ?? "/default-avatar.svg";
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between container">
+    <main className="flex min-h-screen flex-col items-center justify-between container pt-12! md:pt-24! gap-12">
       <div className="welcomeWrapper flex gap-6">
         <div className="imgWrapper content-center justify-center">
           <Image
@@ -55,21 +55,7 @@ export default async function Dashboard() {
         form below to shorten a new URL!
       </p>
       <div className="mt-8 flex gap-4">
-        <form action={createLink} className="flex items-center gap-2">
-          <input
-            type="url"
-            name="originalUrl"
-            placeholder="Enter your URL here"
-            required
-            className="border border-accent-dark p-2 rounded text-accent-dark placeholder-accent-dark"
-          />
-          <button
-            type="submit"
-            className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-2 px-4 rounded border border-accent-dark"
-          >
-            Create Link
-          </button>
-        </form>
+        <CreateLinkForm />
       </div>
 
       <div className="mt-8 w-full">

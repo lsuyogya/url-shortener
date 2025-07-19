@@ -1,3 +1,5 @@
+"use server";
+
 import { prisma } from "../prisma";
 import { encodeBase62 } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
@@ -12,7 +14,27 @@ export async function createLink(formData: FormData) {
     if (!session || !session.user || !session.user.id) {
       throw new Error("Unauthorized");
     }
-    const userId = session.user.id; // Explicitly narrow type to string
+    const userId = session.user.id;
+
+    const urlRegex = new RegExp(
+      /^https?:\/\/(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}(?::\d+)?(?:\/[^\s]*)?$/
+    );
+
+    if (!urlRegex.test(originalUrl)) {
+      throw new Error("Invalid URL format.");
+    }
+
+    const existingLink = await prisma.link.findFirst({
+      where: {
+        originalUrl: originalUrl,
+        userId: userId,
+      },
+    });
+
+    if (existingLink) {
+      throw new Error("URL already shortened by you.");
+    }
+
     const newLink = await prisma.$transaction(async (tx) => {
       const link = await tx.link.create({
         data: {
@@ -35,40 +57,10 @@ export async function createLink(formData: FormData) {
         },
       });
     });
-    revalidatePath("/");
+    revalidatePath("/dashboard");
   } catch (error) {
     console.error("Error creating link:", error);
-  }
-}
-
-export async function deleteLatestLink() {
-  "use server";
-  const session = await auth();
-  if (!session || !session.user || !session.user.id) {
-    throw new Error("Unauthorized");
-  }
-  try {
-    const latestLink = await prisma.link.findFirst({
-      where: {
-        userId: session.user.id,
-      },
-      orderBy: {
-        createdAt: "desc",
-      },
-    });
-
-    if (latestLink) {
-      await prisma.link.delete({
-        where: {
-          id: latestLink.id,
-        },
-      });
-      revalidatePath("/");
-    } else {
-      console.log("No links to delete.");
-    }
-  } catch (error) {
-    console.error("Error deleting link:", error);
+    throw error; // Re-throw the error after logging
   }
 }
 

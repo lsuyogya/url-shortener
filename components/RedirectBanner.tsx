@@ -37,7 +37,7 @@ export function RedirectBanner({ originalUrl, delay }: RedirectBannerProps) {
         </a>
       </p>
       <div className="mt-8 p-4 bg-primary-light rounded-lg shadow-lg">
-        <div className="flex flex-col items-center">
+        <div className="flex flex-col gap-6 items-center">
           <Image
             src={SampleAd}
             alt="Ad Banner"
