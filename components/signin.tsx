@@ -7,7 +7,7 @@ export default function SignIn() {
     <button
       type="button"
       onClick={() => signIn("google")}
-      className="hover:cursor-pointer flex gap-4 rounded px-4 py-2 text-white hover:bg-gray-900 items-center border border-white"
+      className="hover:cursor-pointer flex gap-4 rounded px-4 py-2 text-accent-light hover:bg-primary-dark items-center border border-accent-light"
     >
       <FcGoogle /> Sign in with Google
     </button>

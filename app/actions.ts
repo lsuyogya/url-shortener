@@ -1,15 +1,39 @@
 import { prisma } from "../prisma";
+import { encodeBase62 } from "@/lib/utils";
 import { revalidatePath } from "next/cache";
 
-export async function createLink() {
+import { auth } from "@/lib/auth";
+
+export async function createLink(formData: FormData) {
   "use server";
+  const originalUrl = formData.get("originalUrl") as string;
   try {
-    await prisma.link.create({
-      data: {
-        slug: `test-link-${Date.now()}`,
-        originalUrl: "https://example.com",
-        userId: "cmd9pn5c20001v2isn1gbw9kz", // Replace with a valid userId from your database or create a dummy one
-      },
+    const session = await auth();
+    if (!session || !session.user || !session.user.id) {
+      throw new Error("Unauthorized");
+    }
+    const userId = session.user.id; // Explicitly narrow type to string
+    const newLink = await prisma.$transaction(async (tx) => {
+      const link = await tx.link.create({
+        data: {
+          originalUrl: originalUrl,
+          userId: userId,
+        },
+      });
+
+      const min = 62 ** 5;
+      const max = 62 ** 6 - 1;
+      const randomPadding = Math.floor(Math.random() * (max - min + 1)) + min;
+      const slug = encodeBase62(link.id + randomPadding);
+
+      return await tx.link.update({
+        where: {
+          id: link.id,
+        },
+        data: {
+          slug: slug,
+        },
+      });
     });
     revalidatePath("/");
   } catch (error) {
@@ -19,8 +43,15 @@ export async function createLink() {
 
 export async function deleteLatestLink() {
   "use server";
+  const session = await auth();
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("Unauthorized");
+  }
   try {
     const latestLink = await prisma.link.findFirst({
+      where: {
+        userId: session.user.id,
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -39,4 +70,29 @@ export async function deleteLatestLink() {
   } catch (error) {
     console.error("Error deleting link:", error);
   }
+}
+
+export async function getLinks() {
+  "use server";
+  const session = await auth();
+  if (!session || !session.user || !session.user.id) {
+    throw new Error("Unauthorized");
+  }
+  const links = await prisma.link.findMany({
+    where: {
+      userId: session.user.id,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    include: {
+      visits: {
+        orderBy: {
+          timestamp: "desc",
+        },
+        take: 1,
+      },
+    },
+  });
+  return links;
 }

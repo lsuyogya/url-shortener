@@ -55,28 +55,22 @@ model VerificationToken {
 }
 
 model Link {
-  id          String    @id @default(cuid())
-  slug        String    @unique
+  id          Int       @id @default(autoincrement())
+  slug        String?   @unique
   originalUrl String
   userId      String
   createdAt   DateTime  @default(now())
   expiresAt   DateTime?
   clicks      Int       @default(0)
-  adDelay     Int       @default(5) 
+   
 
   user        User      @relation(fields: [userId], references: [id])
   visits      Visit[]
 }
 
-model TestEntry {
-  id        String   @id @default(cuid())
-  message   String
-  createdAt DateTime @default(now())
-}
-
 model Visit {
   id         String   @id @default(cuid())
-  linkId     String
+  linkId     Int
   timestamp  DateTime @default(now())
   ip         String?
   referrer   String?
@@ -85,3 +79,4 @@ model Visit {
 
   link       Link     @relation(fields: [linkId], references: [id])
 }
+
