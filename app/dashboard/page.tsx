@@ -6,6 +6,7 @@ import { redirect } from "next/navigation";
 import { LinksTable } from "@/components/LinksTable";
 import { headers } from "next/headers";
 import Image from "next/image";
+import SignOutButton from "@/components/SignOutButton";
 
 export default async function Dashboard() {
   const session = await auth();
@@ -48,6 +49,7 @@ export default async function Dashboard() {
           />
         </div>
         <h1 className="text-4xl font-bold">Welcome, {session?.user?.name}</h1>
+        <SignOutButton />
       </div>
       <p className="mt-4 text-lg text-center text-accent-dark max-w-[60ch]">
         This is your personal URL shortener dashboard. Easily create and manage
