@@ -62,9 +62,7 @@ model Link {
   originalUrl String
   userId      String
   createdAt   DateTime  @default(now())
-  expiresAt   DateTime?
   clicks      Int       @default(0)
-   
 
   user        User      @relation(fields: [userId], references: [id])
   visits      Visit[]

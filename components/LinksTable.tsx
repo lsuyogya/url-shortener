@@ -29,12 +29,29 @@ export function LinksTable({ links, origin }: LinksTableProps) {
     navigator.clipboard.writeText(text);
     toast.success("Copied to clipboard!");
   };
-  const handleOpen = (text: string) => {
-    window.open(text, "_blank");
-  };
 
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const handleShare = async (url: string) => {
+      if (navigator.share) {
+        try {
+          await navigator.share({
+            title: "Shortened URL",
+            url: url,
+          });
+          toast.success("Link shared successfully!");
+        } catch (error) {
+          console.error("Error sharing:", error);
+          toast.error("Failed to share link.");
+        }
+      } else {
+        handleCopy(url); // Fallback to copy if share API is not available
+      }
+    };
+
+    const handleOpen = (text: string) => {
+      window.open(text, "_blank");
+    };
+    return [
       {
         accessorKey: "redirectionUrl",
         header: "Redirection URL",
@@ -42,12 +59,25 @@ export function LinksTable({ links, origin }: LinksTableProps) {
         cell: (info: CellContext<LinkWithVisits, unknown>) => (
           <div className="flex items-center gap-2">
             <span>{`${origin}/${info.row.original.slug}`}</span>
-            <button
-              onClick={() => handleCopy(`${origin}/${info.row.original.slug}`)}
-              className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
-            >
-              Copy
-            </button>
+            {typeof navigator.share === "function" ? (
+              <button
+                onClick={() =>
+                  handleShare(`${origin}/${info.row.original.slug}`)
+                }
+                className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
+              >
+                Share
+              </button>
+            ) : (
+              <button
+                onClick={() =>
+                  handleCopy(`${origin}/${info.row.original.slug}`)
+                }
+                className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
+              >
+                Copy
+              </button>
+            )}
             <button
               onClick={() => handleOpen(`${origin}/${info.row.original.slug}`)}
               className="bg-primary-light hover:bg-accent-dark text-primary-dark font-bold py-1 px-2 rounded text-sm"
@@ -82,9 +112,8 @@ export function LinksTable({ links, origin }: LinksTableProps) {
             ? new Date(info.row.original.visits[0].timestamp).toLocaleString()
             : "N/A",
       },
-    ],
-    [origin]
-  );
+    ];
+  }, [origin]);
 
   const [pagination, setPagination] = useState({
     pageIndex: 0,
