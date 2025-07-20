@@ -5,12 +5,11 @@ import toast from "react-hot-toast";
 
 export function CreateLinkForm() {
   const handleSubmit = async (formData: FormData) => {
-    try {
-      await createLink(formData);
+    const result = await createLink(formData);
+    if (result.success) {
       toast.success("Link created successfully!");
-    } catch (error: unknown) {
-      const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred.";
-      toast.error(errorMessage);
+    } else {
+      toast.error(result.error || "An unknown error occurred.");
     }
   };
 

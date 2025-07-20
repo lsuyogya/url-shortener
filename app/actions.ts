@@ -6,13 +6,16 @@ import { revalidatePath } from "next/cache";
 
 import { auth } from "@/lib/auth";
 
-export async function createLink(formData: FormData) {
+export async function createLink(formData: FormData): Promise<{
+  success: boolean;
+  error?: string;
+}> {
   "use server";
   const originalUrl = formData.get("originalUrl") as string;
   try {
     const session = await auth();
     if (!session || !session.user || !session.user.id) {
-      throw new Error("Unauthorized");
+      return { success: false, error: "Unauthorized" };
     }
     const userId = session.user.id;
 
@@ -21,7 +24,7 @@ export async function createLink(formData: FormData) {
     );
 
     if (!urlRegex.test(originalUrl)) {
-      throw new Error("Invalid URL format.");
+      return { success: false, error: "Invalid URL format." };
     }
 
     const existingLink = await prisma.link.findFirst({
@@ -32,35 +35,24 @@ export async function createLink(formData: FormData) {
     });
 
     if (existingLink) {
-      throw new Error("URL is already shortened.");
+      return { success: false, error: "URL is already shortened." };
     }
 
-    const newLink = await prisma.$transaction(async (tx) => {
-      const link = await tx.link.create({
-        data: {
-          originalUrl: originalUrl,
-          userId: userId,
-        },
-      });
+    const slug = encodeBase62(Date.now() + Math.random());
 
-      const min = 62 ** 5;
-      const max = 62 ** 6 - 1;
-      const randomPadding = Math.floor(Math.random() * (max - min + 1)) + min;
-      const slug = encodeBase62(link.id + randomPadding);
-
-      return await tx.link.update({
-        where: {
-          id: link.id,
-        },
-        data: {
-          slug: slug,
-        },
-      });
+    await prisma.link.create({
+      data: {
+        originalUrl: originalUrl,
+        userId: userId,
+        slug: slug,
+      },
     });
+
     revalidatePath("/dashboard");
+    return { success: true };
   } catch (error) {
     console.error("Error creating link:", error);
-    throw error; // Re-throw the error after logging
+    return { success: false, error: "An unexpected error occurred." };
   }
 }
 

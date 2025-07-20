@@ -1,5 +1,5 @@
+import { getLinks } from "@/app/actions";
 import { CreateLinkForm } from "@/components/CreateLinkForm";
-import { prisma } from "@/prisma";
 
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
@@ -14,22 +14,7 @@ export default async function Dashboard() {
   if (!session) {
     redirect("/");
   }
-  const links = await prisma.link.findMany({
-    where: {
-      userId: session?.user?.id,
-    },
-    orderBy: {
-      createdAt: "desc",
-    },
-    include: {
-      visits: {
-        orderBy: {
-          timestamp: "desc",
-        },
-        take: 1,
-      },
-    },
-  });
+  const links = await getLinks();
 
   const headersList = await headers();
   const protocol = headersList.get("x-forwarded-proto") || "http";
