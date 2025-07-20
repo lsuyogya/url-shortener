@@ -7,6 +7,10 @@ import {
   flexRender,
   getPaginationRowModel,
   getSortedRowModel,
+  ColumnDef,
+  CellContext,
+  SortingState,
+  Updater,
 } from "@tanstack/react-table";
 import { useMemo, useState } from "react";
 import toast from "react-hot-toast";
@@ -35,7 +39,7 @@ export function LinksTable({ links, origin }: LinksTableProps) {
         accessorKey: "redirectionUrl",
         header: "Redirection URL",
         enableSorting: false, // has btn tags, no point sorting
-        cell: (info: any) => (
+        cell: (info: CellContext<LinkWithVisits, unknown>) => (
           <div className="flex items-center gap-2">
             <span>{`${origin}/${info.row.original.slug}`}</span>
             <button
@@ -56,23 +60,23 @@ export function LinksTable({ links, origin }: LinksTableProps) {
       {
         accessorKey: "originalUrl",
         header: "Original URL",
-        cell: (info: any) => info.getValue(),
+        cell: (info: CellContext<LinkWithVisits, unknown>) => info.getValue(),
       },
       {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: (info: any) => new Date(info.getValue()).toLocaleString(),
+        cell: (info: CellContext<LinkWithVisits, unknown>) => new Date(info.getValue() as string).toLocaleString(),
       },
       {
         accessorKey: "clicks",
         header: "Visit Count",
-        cell: (info: any) => info.getValue(),
+        cell: (info: CellContext<LinkWithVisits, unknown>) => info.getValue(),
       },
       {
         accessorKey: "lastVisit",
         header: "Last Visit",
         enableSorting: true,
-        cell: (info: any) =>
+        cell: (info: CellContext<LinkWithVisits, unknown>) =>
           info.row.original.visits.length > 0
             ? new Date(info.row.original.visits[0].timestamp).toLocaleString()
             : "N/A",
@@ -85,16 +89,22 @@ export function LinksTable({ links, origin }: LinksTableProps) {
     pageIndex: 0,
     pageSize: 5,
   });
-  const [sorting, setSorting] = useState([]);
+  const [sorting, setSorting] = useState<SortingState>([]);
 
-  const table = useReactTable({
+  const table = useReactTable<LinkWithVisits>({
     data: links,
     columns,
     getCoreRowModel: getCoreRowModel(),
     getPaginationRowModel: getPaginationRowModel(),
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination,
-    onSortingChange: setSorting,
+    onSortingChange: (updater: Updater<SortingState>) => {
+      if (typeof updater === 'function') {
+        setSorting(updater);
+      } else {
+        setSorting(updater);
+      }
+    },
     state: {
       pagination,
       sorting,
@@ -159,9 +169,9 @@ export function LinksTable({ links, origin }: LinksTableProps) {
               },
               (_, i) => (
                 <tr key={`empty-${i}`}>
-                  {columns.map((column: any) => (
+                  {columns.map((column: ColumnDef<LinkWithVisits>) => (
                     <td
-                      key={column.accessorKey}
+                      key={column.id}
                       className="py-2 px-4 border-b border-primary-light"
                     >
                       &nbsp;

@@ -8,8 +8,9 @@ export function CreateLinkForm() {
     try {
       await createLink(formData);
       toast.success("Link created successfully!");
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      const errorMessage = (error instanceof Error) ? error.message : "An unknown error occurred.";
+      toast.error(errorMessage);
     }
   };
 
