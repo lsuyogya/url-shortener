@@ -2,14 +2,12 @@ import { prisma } from "@/prisma";
 import { redirect } from "next/navigation";
 import { RedirectBanner } from "@/components/RedirectBanner";
 
-interface RedirectPageProps {
-  params: {
-    slug: string;
-  };
-}
-
-export default async function RedirectPage({ params }: RedirectPageProps) {
-  const { slug } = params;
+export default async function RedirectPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
 
   const link = await prisma.link.findUnique({
     where: {
