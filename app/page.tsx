@@ -3,8 +3,8 @@ import { FaArrowDown } from "react-icons/fa";
 import Image from "next/image";
 import { auth } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import LongUrlImg from "@/assets/images/LONG_URL.png";
 import { headers } from "next/headers";
+import LogoImg from "@/assets/images/Logo.png";
 
 export default async function Home() {
   const headersList = await headers();
@@ -21,7 +21,7 @@ export default async function Home() {
     <main className="flex flex-col items-center justify-between container pt-12! md:pt-24! gap-12">
       <Image
         className="w-auto h-auto object-contain m-auto"
-        src="/logo.png"
+        src={LogoImg}
         alt="Logo"
         width={192}
         height={192}

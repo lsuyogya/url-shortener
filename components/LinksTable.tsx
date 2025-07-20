@@ -65,7 +65,8 @@ export function LinksTable({ links, origin }: LinksTableProps) {
       {
         accessorKey: "createdAt",
         header: "Created At",
-        cell: (info: CellContext<LinkWithVisits, unknown>) => new Date(info.getValue() as string).toLocaleString(),
+        cell: (info: CellContext<LinkWithVisits, unknown>) =>
+          new Date(info.getValue() as string).toLocaleString(),
       },
       {
         accessorKey: "clicks",
@@ -99,7 +100,7 @@ export function LinksTable({ links, origin }: LinksTableProps) {
     getSortedRowModel: getSortedRowModel(),
     onPaginationChange: setPagination,
     onSortingChange: (updater: Updater<SortingState>) => {
-      if (typeof updater === 'function') {
+      if (typeof updater === "function") {
         setSorting(updater);
       } else {
         setSorting(updater);
@@ -115,11 +116,11 @@ export function LinksTable({ links, origin }: LinksTableProps) {
     <div className="overflow-x-auto">
       <table className="min-w-full bg-primary-dark border border-primary-light text-accent-light">
         <thead className="bg-accent-dark text-primary-dark">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
+          {table.getHeaderGroups().map((headerGroup, index) => (
+            <tr key={headerGroup.id + index}>
+              {headerGroup.headers.map((header, index) => (
                 <th
-                  key={header.id}
+                  key={header.id + index}
                   className="py-2 px-4 border-b border-accent-dark bg-accent-dark text-left"
                 >
                   {header.isPlaceholder ? null : (
@@ -147,11 +148,11 @@ export function LinksTable({ links, origin }: LinksTableProps) {
           ))}
         </thead>
         <tbody className="bg-primary-dark">
-          {table.getRowModel().rows.map((row) => (
-            <tr key={row.id}>
-              {row.getVisibleCells().map((cell) => (
+          {table.getRowModel().rows.map((row, index) => (
+            <tr key={row.id + index}>
+              {row.getVisibleCells().map((cell, index) => (
                 <td
-                  key={cell.id}
+                  key={cell.id + index}
                   className="py-2 px-4 border-b border-primary-light"
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
@@ -169,9 +170,9 @@ export function LinksTable({ links, origin }: LinksTableProps) {
               },
               (_, i) => (
                 <tr key={`empty-${i}`}>
-                  {columns.map((column: ColumnDef<LinkWithVisits>) => (
+                  {columns.map((column: ColumnDef<LinkWithVisits>, index) => (
                     <td
-                      key={column.id}
+                      key={column.id ?? 0 + index}
                       className="py-2 px-4 border-b border-primary-light"
                     >
                       &nbsp;
